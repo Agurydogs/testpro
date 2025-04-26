@@ -37,7 +37,11 @@
         <input type="text" id="url-input" placeholder="URLを入力">
         <button id="go">Go</button>
     </div>
-    <webview id="browser-view" src="https://www.google.com"></webview>
+    <webview id="browser-view" 
+             src="https://www.google.com"
+             allowpopups
+             webpreferences="allowRunningInsecureContent,images=yes">
+    </webview>
 
     <script>
         const webview = document.getElementById('browser-view');
