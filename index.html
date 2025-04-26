@@ -27,6 +27,13 @@
             height: calc(100vh - 60px);
             border: none;
         }
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -37,19 +44,46 @@
         <input type="text" id="url-input" placeholder="URLを入力">
         <button id="go">Go</button>
     </div>
+    <div id="loading">読み込み中...</div>
     <webview id="browser-view" 
              src="https://www.google.com"
              allowpopups
-             webpreferences="allowRunningInsecureContent,images=yes">
+             webpreferences="allowRunningInsecureContent,images=yes,webSecurity=no"
+             partition="persist:main"
+             nodeintegration
+             plugins
+             disablewebsecurity>
     </webview>
 
     <script>
         const webview = document.getElementById('browser-view');
         const urlInput = document.getElementById('url-input');
+        const loading = document.getElementById('loading');
         
+        // 読み込み状態の監視
+        webview.addEventListener('did-start-loading', () => {
+            loading.style.display = 'block';
+        });
+
+        webview.addEventListener('did-stop-loading', () => {
+            loading.style.display = 'none';
+        });
+
         // ナビゲーションイベントの監視
         webview.addEventListener('did-navigate', (event) => {
             urlInput.value = event.url;
+        });
+
+        webview.addEventListener('did-fail-load', (event) => {
+            console.error('Failed to load:', event);
+            loading.style.display = 'none';
+            webview.innerHTML = `
+                <div style="padding: 20px; color: red;">
+                    <h3>ページの読み込みに失敗しました</h3>
+                    <p>エラーコード: ${event.errorCode}</p>
+                    <p>エラーメッセージ: ${event.errorDescription}</p>
+                </div>
+            `;
         });
 
         // コントロールボタンのイベントハンドラ
