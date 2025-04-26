@@ -22,16 +22,10 @@
             padding: 5px 10px;
             cursor: pointer;
         }
-        #browser-view {
+        webview {
             width: 100%;
             height: calc(100vh - 60px);
             border: none;
-        }
-        #content {
-            width: 100%;
-            height: calc(100vh - 60px);
-            border: none;
-            overflow: auto;
         }
     </style>
 </head>
@@ -43,71 +37,32 @@
         <input type="text" id="url-input" placeholder="URLを入力">
         <button id="go">Go</button>
     </div>
-    <div id="content"></div>
+    <webview id="browser-view" src="https://www.google.com"></webview>
 
     <script>
-        const content = document.getElementById('content');
+        const webview = document.getElementById('browser-view');
         const urlInput = document.getElementById('url-input');
-        const WORKER_URL = 'https://your-worker.your-subdomain.workers.dev/'; // ここを実際のWorkerのURLに更新してください
         
-        let currentUrl = '';
-        let history = [];
-        let historyIndex = -1;
+        // ナビゲーションイベントの監視
+        webview.addEventListener('did-navigate', (event) => {
+            urlInput.value = event.url;
+        });
 
-        async function loadUrl(url) {
-            try {
-                currentUrl = url;
-                // 別のCORSプロキシサービスを使用
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-                const response = await fetch(proxyUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const text = await response.text();
-                
-                // コンテンツを表示
-                content.innerHTML = text;
-                
-                // 履歴を更新
-                if (historyIndex < history.length - 1) {
-                    history = history.slice(0, historyIndex + 1);
-                }
-                history.push(url);
-                historyIndex = history.length - 1;
-                
-                // URLバーを更新
-                urlInput.value = url;
-            } catch (error) {
-                console.error('Error details:', error);
-                content.innerHTML = `<div style="padding: 20px; color: red;">
-                    <h3>エラーが発生しました</h3>
-                    <p>エラーメッセージ: ${error.message}</p>
-                    <p>URL: ${url}</p>
-                    <p>このエラーは一時的な接続の問題による可能性があります。しばらく待ってから再度お試しください。</p>
-                </div>`;
-            }
-        }
-
+        // コントロールボタンのイベントハンドラ
         document.getElementById('back').addEventListener('click', () => {
-            if (historyIndex > 0) {
-                historyIndex--;
-                loadUrl(history[historyIndex]);
+            if (webview.canGoBack()) {
+                webview.goBack();
             }
         });
 
         document.getElementById('forward').addEventListener('click', () => {
-            if (historyIndex < history.length - 1) {
-                historyIndex++;
-                loadUrl(history[historyIndex]);
+            if (webview.canGoForward()) {
+                webview.goForward();
             }
         });
 
         document.getElementById('reload').addEventListener('click', () => {
-            if (currentUrl) {
-                loadUrl(currentUrl);
-            }
+            webview.reload();
         });
 
         document.getElementById('go').addEventListener('click', () => {
@@ -115,7 +70,7 @@
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
                 url = 'https://' + url;
             }
-            loadUrl(url);
+            webview.loadURL(url);
         });
 
         urlInput.addEventListener('keypress', (e) => {
@@ -124,12 +79,9 @@
                 if (!url.startsWith('http://') && !url.startsWith('https://')) {
                     url = 'https://' + url;
                 }
-                loadUrl(url);
+                webview.loadURL(url);
             }
         });
-
-        // 初期ページを読み込む
-        loadUrl('https://www.google.com');
     </script>
 </body>
 </html> 
