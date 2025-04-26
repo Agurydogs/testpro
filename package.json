@@ -1,0 +1,42 @@
+{
+  "name": "electron-browser",
+  "version": "1.0.0",
+  "description": "A simple browser built with Electron",
+  "source": "index.html",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:web": "parcel build index.html --public-url ./",
+    "serve:web": "parcel index.html"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-builder": "^24.13.3",
+    "sharp": "^0.34.1",
+    "parcel": "^2.10.3",
+    "@parcel/transformer-html": "^2.10.3",
+    "@parcel/transformer-js": "^2.10.3"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "build": {
+    "appId": "com.electron.browser",
+    "productName": "Electron Browser",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

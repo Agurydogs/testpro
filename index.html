@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Electron Browser</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #controls {
+            padding: 10px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+        #url-input {
+            width: 80%;
+            padding: 5px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        #browser-view {
+            width: 100%;
+            height: calc(100vh - 60px);
+            border: none;
+        }
+        #content {
+            width: 100%;
+            height: calc(100vh - 60px);
+            border: none;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button id="back">←</button>
+        <button id="forward">→</button>
+        <button id="reload">↻</button>
+        <input type="text" id="url-input" placeholder="URLを入力">
+        <button id="go">Go</button>
+    </div>
+    <div id="content"></div>
+
+    <script>
+        const content = document.getElementById('content');
+        const urlInput = document.getElementById('url-input');
+        const WORKER_URL = 'https://your-worker.your-subdomain.workers.dev/'; // ここを実際のWorkerのURLに更新してください
+        
+        let currentUrl = '';
+        let history = [];
+        let historyIndex = -1;
+
+        async function loadUrl(url) {
+            try {
+                currentUrl = url;
+                const proxyUrl = `${WORKER_URL}?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                const text = await response.text();
+                
+                // コンテンツを表示
+                content.innerHTML = text;
+                
+                // 履歴を更新
+                if (historyIndex < history.length - 1) {
+                    history = history.slice(0, historyIndex + 1);
+                }
+                history.push(url);
+                historyIndex = history.length - 1;
+                
+                // URLバーを更新
+                urlInput.value = url;
+            } catch (error) {
+                content.innerHTML = `<div style="padding: 20px; color: red;">
+                    エラー: ${error.message}
+                </div>`;
+            }
+        }
+
+        document.getElementById('back').addEventListener('click', () => {
+            if (historyIndex > 0) {
+                historyIndex--;
+                loadUrl(history[historyIndex]);
+            }
+        });
+
+        document.getElementById('forward').addEventListener('click', () => {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                loadUrl(history[historyIndex]);
+            }
+        });
+
+        document.getElementById('reload').addEventListener('click', () => {
+            if (currentUrl) {
+                loadUrl(currentUrl);
+            }
+        });
+
+        document.getElementById('go').addEventListener('click', () => {
+            let url = urlInput.value;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            loadUrl(url);
+        });
+
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                let url = urlInput.value;
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
+                loadUrl(url);
+            }
+        });
+
+        // 初期ページを読み込む
+        loadUrl('https://www.google.com');
+    </script>
+</body>
+</html> 
